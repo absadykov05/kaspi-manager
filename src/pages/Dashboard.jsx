@@ -1,90 +1,102 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 export default function Dashboard() {
-    const [storeInfo, setStoreInfo] = useState(null);
-    const [products, setProducts] = useState([]);
+    const navigate = useNavigate();
+    const token = localStorage.getItem("kaspiToken");
+
     const [orders, setOrders] = useState([]);
+    const [newOrders, setNewOrders] = useState([]);
+    const [analytics, setAnalytics] = useState(null);
+    const [daysRange, setDaysRange] = useState(7);
 
+    // ⛔️ Перенаправление на ввод токена
     useEffect(() => {
-        fetchStoreInfo();
-        fetchProducts();
-        fetchOrders();
-    }, []);
-
-    const fetchStoreInfo = async () => {
-        try {
-            const response = await axios.get("http://localhost:3000/store-info");
-            setStoreInfo(response.data);
-        } catch (error) {
-            console.error("Error fetching store info:", error);
+        if (!token) {
+            navigate("/add-key");
         }
+    }, [token, navigate]);
+
+    // Загрузка данных
+    useEffect(() => {
+        if (token) {
+            axios.post("http://localhost:3000/set-token", { token });
+            fetchOrders(daysRange);
+            fetchNewOrders();
+            fetchAnalytics();
+        }
+    }, [token, daysRange]);
+
+    const fetchOrders = async (days) => {
+        const res = await axios.get(`http://localhost:3000/orders?days=${days}`);
+        setOrders(res.data.data || []);
     };
 
-    const fetchProducts = async () => {
-        try {
-            const response = await axios.get("http://localhost:3000/products");
-            setProducts(response.data);
-        } catch (error) {
-            console.error("Error fetching products:", error);
-        }
+    const fetchNewOrders = async () => {
+        const res = await axios.get("http://localhost:3000/orders/new");
+        setNewOrders(res.data.data || []);
     };
 
-    const fetchOrders = async () => {
-        try {
-            const response = await axios.get("http://localhost:3000/orders");
-            setOrders(response.data);
-        } catch (error) {
-            console.error("Error fetching orders:", error);
-        }
+    const fetchAnalytics = async () => {
+        const res = await axios.get("http://localhost:3000/analytics");
+        setAnalytics(res.data);
+    };
+
+    const renderOrder = (order) => {
+        const a = order.attributes;
+
+        return (
+            <li key={order.id} style={{ marginBottom: "1rem", padding: "1rem", border: "1px solid #ddd", borderRadius: "6px" }}>
+                <strong>#{order.id}</strong> — {a.state}<br />
+                💰 <strong>{a.totalPrice} ₸</strong><br />
+                👤 {a.customer?.firstName} {a.customer?.lastName}<br />
+                🛒 <strong>Товары:</strong>
+                <ul>
+                    {(a.entries || []).map((item, i) => (
+                        <li key={i}>
+                            {item.offer?.name || "Без названия"} — {item.quantity} × {item.basePrice} ₸
+                        </li>
+                    ))}
+                </ul>
+            </li>
+        );
     };
 
     return (
         <div className="container">
-            <h1 className="text-center">📊 Store Dashboard</h1>
+            <h1>📊 Kaspi Manager Dashboard</h1>
 
-            {/* Store Info */}
-            {storeInfo ? (
-                <div className="card">
-                    <h2>🏪 Store: {storeInfo.name}</h2>
-                    <p>📦 Total Products: {storeInfo.productCount}</p>
-                    <p>💰 Total Sales: {storeInfo.salesTotal} ₸</p>
-                </div>
-            ) : (
-                <p>Loading store info...</p>
-            )}
-
-            {/* Product List */}
-            <h2>🛒 Products</h2>
-            <div className="product-list">
-                {products.length > 0 ? (
-                    <ul>
-                        {products.map((product) => (
-                            <li key={product.id}>
-                                {product.name} - {product.price} ₸ (Stock: {product.stock})
-                            </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p>No products found.</p>
-                )}
+            {/* Переключатель дней */}
+            <div style={{ marginBottom: "1rem" }}>
+                <button onClick={() => setDaysRange(7)}>7 дней</button>
+                <button onClick={() => setDaysRange(14)} style={{ marginLeft: "1rem" }}>14 дней</button>
             </div>
 
-            {/* Order List */}
-            <h2>📦 Orders</h2>
-            <div className="order-list">
-                {orders.length > 0 ? (
-                    <ul>
-                        {orders.map((order) => (
-                            <li key={order.id}>
-                                Order #{order.id} - {order.status} - {order.total} ₸
-                            </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p>No orders found.</p>
-                )}
-            </div>
+            {/* Заказы */}
+            <h2>📦 Заказы за {daysRange} дней</h2>
+            <ul>{orders.map(renderOrder)}</ul>
+
+
+            {/* Аналитика */}
+
+            <h2>🌟 Хиты продаж</h2>
+            {analytics?.bestSellers?.length > 0 ? (
+                <ul>
+                    {analytics.bestSellers.map((item, i) => (
+                        <li key={i}>{item.name}: {item.quantity} шт — {item.revenue} ₸</li>
+                    ))}
+                </ul>
+            ) : <p>Нет данных</p>}
+
+            <h2>🧠 Рекомендации</h2>
+            {analytics?.recommendations?.length > 0 ? (
+                <ul>
+                    {analytics.recommendations.map((r, i) => (
+                        <li key={i}><strong>{r.name}</strong>: {r.recommendation}</li>
+                    ))}
+                </ul>
+            ) : <p>Рекомендаций пока нет</p>}
         </div>
     );
 }
