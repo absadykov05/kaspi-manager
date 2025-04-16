@@ -1,17 +1,11 @@
+// models/OrderModel.js
 import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema({
-    orderId: String,
-    creationDate: Number,
+    orderId: { type: String, unique: true },
     totalPrice: Number,
-    state: String,
-    entries: [
-        {
-            name: String,
-            quantity: Number,
-            price: Number,
-        },
-    ],
+    entries: Array,
+    createdAt: Date,
 });
 
 const OrderModel = mongoose.model("Order", orderSchema);

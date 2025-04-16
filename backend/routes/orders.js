@@ -17,7 +17,7 @@ router.get("/orders", async (req, res) => {
         const url = `https://kaspi.kz/shop/api/v2/orders?page[number]=0&page[size]=20&filter[orders][creationDate][$ge]=${from}&filter[orders][creationDate][$le]=${now}`;
         const ordersRes = await axios.get(url, {
             headers: { "X-Auth-Token": token }
-        });
+     });
 
         const orders = ordersRes.data.data;
 
@@ -53,7 +53,7 @@ router.get("/orders", async (req, res) => {
 });
 
 
-// 🔁 Только новые заказы
+
 router.get("/orders/new", async (req, res) => {
     const token = getToken();
     if (!token) return res.status(403).json({ error: "API Token is missing" });

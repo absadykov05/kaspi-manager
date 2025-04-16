@@ -15,6 +15,10 @@ export async function saveOrdersToDB(orders) {
                 });
                 await newOrder.save();
                 saved++;
+
+                console.log("✅ Заказ сохранён:", order.id);
+            } else {
+                console.log("ℹ️ Заказ уже существует:", order.id);
             }
         }
 

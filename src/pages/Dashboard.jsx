@@ -68,35 +68,39 @@ export default function Dashboard() {
             <h1>📊 Kaspi Manager Dashboard</h1>
 
             {/* Переключатель дней */}
-            <div style={{ marginBottom: "1rem" }}>
+            <div style={{marginBottom: "1rem"}}>
                 <button onClick={() => setDaysRange(7)}>7 дней</button>
-                <button onClick={() => setDaysRange(14)} style={{ marginLeft: "1rem" }}>14 дней</button>
+                <button onClick={() => setDaysRange(14)} style={{marginLeft: "1rem"}}>14 дней</button>
             </div>
 
             {/* Заказы */}
-            <h2>📦 Заказы за {daysRange} дней</h2>
-            <ul>{orders.map(renderOrder)}</ul>
-
+            <h2> Заказы за {daysRange} дней</h2>
+            <ul>
+                {orders.map(renderOrder)}
+            </ul>
 
             {/* Аналитика */}
-
-            <h2>🌟 Хиты продаж</h2>
+            <h2> Хиты продаж</h2>
             {analytics?.bestSellers?.length > 0 ? (
                 <ul>
                     {analytics.bestSellers.map((item, i) => (
                         <li key={i}>{item.name}: {item.quantity} шт — {item.revenue} ₸</li>
                     ))}
                 </ul>
-            ) : <p>Нет данных</p>}
+            ) : (
+                <p>Нет данных</p>
+            )}
 
-            <h2>🧠 Рекомендации</h2>
+            <h2> Рекомендации</h2>
             {analytics?.recommendations?.length > 0 ? (
                 <ul>
                     {analytics.recommendations.map((r, i) => (
                         <li key={i}><strong>{r.name}</strong>: {r.recommendation}</li>
                     ))}
                 </ul>
-            ) : <p>Рекомендаций пока нет</p>}
+            ) : (
+                <p>Рекомендаций пока нет</p>
+            )}
         </div>
     );
 }
